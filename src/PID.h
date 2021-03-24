@@ -38,6 +38,8 @@ class PID {
   double p_error;
   double i_error;
   double d_error;
+  double previousInput = 0;
+  double sumCte = 0;
 
   /**
    * PID Coefficients

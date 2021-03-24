@@ -1,5 +1,86 @@
 # CarND-Controls-PID
-Self-Driving Car Engineer Nanodegree Program
+[![Udacity - Self-Driving Car NanoDegree](https://s3.amazonaws.com/udacity-sdc/github/shield-carnd.svg)](http://www.udacity.com/drive)
+
+[![](writeup-resources/sc.png)](https://youtu.be/E_DrSCbe_X4)
+
+## Writeup
+
+The objective of the project is to implement a PID controller that can drive the car in the simulator safely through the websocket communication
+where the simulator will feed the program a JSON formatted data of CTE, Speed, Steering Angle and few others and it expect the program to reply
+with new steering angle to cruise the car safely by minimizing the Cross Track Error (CTE).
+
+PID is the acronym for **proportional–integral–derivative controller** which is according to [Wikipedia](https://en.wikipedia.org/wiki/PID_controller) definition is:
+
+```
+A proportional–integral–derivative controller (PID controller or three-term controller) is a control loop mechanism employing feedback that is widely used in industrial control systems and a variety of other applications requiring continuously modulated control. A PID controller continuously calculates an error value e(t) as the difference between a desired setpoint (SP) and a measured process variable (PV) and applies a correction based on proportional, integral, and derivative terms (denoted P, I, and D respectively)
+```
+
+Mathematically PID can be express as follows:
+
+![pid-equation](writeup-resources/pid_equation.png)
+
+Image source: [Hackernoon](https://hackernoon.com/a-conceptual-breakdown-of-pid-controllers-9fa072a140a5)
+
+However for this project we will be using slightly tweaked PID equation that exclude time from the equation as such:
+
+![pid_cte](writeup-resources/pid_cte.png)
+
+#### Proportional (P)
+
+"Proportional" or "P" for short, is the component that has the direct effect on the car's behavior. It causes the car to steer proportionally to the CTE (Cross Track Error), that is the car's center distance from the lane center. If the car is widely far to the left, it will adjust for the steering angle correction to go right. If its the opposite, the steering angle update will make it go left and try and keep the car as close to the center as possible.
+
+The P or Proportional component of the PID is the main component to steer the car by applying the force propositional to the CTE in opposite direction when the CTE is greater than 0. As example as shown in the image below when the gain of the P is set to 1 the steer produced the exact magnitude but in the opposite direction which move the car back to the position of the center. The P can steer the car without issue on the straight lane however unable to steer correctly on turn.
+
+![pid_cte](writeup-resources/tuning_p.png)
+
+#### Integral (I)
+
+The integral component is the accumulation of the Cross Track Error (CTE) overtime and it's used mainly to eliminate systemic error such when the mechanical part of a vehicle is poorly calibrated. However due to the nature of the accumulation, for the car in this project simulation it should be tuned to a very small value as we can see from the following chart, the value of 1 with other gain parameters are set to 0, causes too much drag that causes delay to steer to opposite direction of CTE.
+
+![pid_cte](writeup-resources/tuning_i.png)
+
+#### Differentiation (D)
+
+This component serve as the rate of change of the CTE, in other word subtracting the currenct and previous CTE. As demonstrated in the chart below, the D component alone cannot steer the car to reduce the CTE as the force it applies will be very litte if the CTE is not oscilatting.
+
+![pid_cte](writeup-resources/tuning_d.png)
+
+The D component should be combined with P as display in the chart below the Mean Square Error (MSE) significantly reduced to only 0.07 from the 6.24 when the gain in P is configured to 1 and D to 10.
+
+![pid_cte](writeup-resources/tuning_pd.png)
+
+
+The final hyperparameter for the gain in the P,I and D were chosen using both manual and twiddle. The twiddle algorithm is implemented as described from the lesson as follow but with slight modification to allow the interation with the simulator.
+
+![pid_cte](writeup-resources/twiddle.png)
+
+The program can be executed with `-t` parameter to enable twiddle. The following command is example to run twiddle with initial PID as zero and starting potential difference of 0.1, 0.0001  and 1 for the P,I and D respectively. The `-p`, `-i`, `d`, `--dp`, `--di` and `--dd` allow to continue the twiddle from last execution.
+
+```
+build/pid" -p 0 -i 0  -d 0 --dp 0.1 --di 0.0001 --dd=1 -t
+```
+
+The output of the twidlle will look like the following, 
+
+![pid_cte](writeup-resources/twiddle.png)
+
+which after 112 iterations it found new best cumulative error of 168.256 with:
+
+```
+p: 0.331 i: 7.06965e-09 d: 2.41299
+```
+
+However the twiddle implemented here only measure the first 2000 CTE due to expensiveness of the execution to cover the full track, therefore it is too early to tell if the hyperparameter found from the twiddle is the optimal value.
+
+I have then use the insight from the twiddle log to further refine the final hyperparameter as follows with MSE of 0.19 for the full track driving:
+
+```
+p = 0.2;
+i = 0.00009;
+d = 6;
+```
+
+![pid_cte](writeup-resources/pid.png)
 
 ---
 
