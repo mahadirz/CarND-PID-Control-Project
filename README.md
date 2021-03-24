@@ -31,23 +31,23 @@ However for this project we will be using slightly tweaked PID equation that exc
 
 The P or Proportional component of the PID is the main component to steer the car by applying the force propositional to the CTE in opposite direction when the CTE is greater than 0. As example as shown in the image below when the gain of the P is set to 1 the steer produced the exact magnitude but in the opposite direction which move the car back to the position of the center. The P can steer the car without issue on the straight lane however unable to steer correctly on turn.
 
-![pid_cte](writeup-resources/tuning_p.png)
+![pid_cte](writeup-resources/tuning-p.png)
 
 #### Integral (I)
 
 The integral component is the accumulation of the Cross Track Error (CTE) overtime and it's used mainly to eliminate systemic error such when the mechanical part of a vehicle is poorly calibrated. However due to the nature of the accumulation, for the car in this project simulation it should be tuned to a very small value as we can see from the following chart, the value of 1 with other gain parameters are set to 0, causes too much drag that causes delay to steer to opposite direction of CTE.
 
-![pid_cte](writeup-resources/tuning_i.png)
+![pid_cte](writeup-resources/tuning-i.png)
 
 #### Differentiation (D)
 
 This component serve as the rate of change of the CTE, in other word subtracting the currenct and previous CTE. As demonstrated in the chart below, the D component alone cannot steer the car to reduce the CTE as the force it applies will be very litte if the CTE is not oscilatting.
 
-![pid_cte](writeup-resources/tuning_d.png)
+![pid_cte](writeup-resources/tuning-d.png)
 
 The D component should be combined with P as display in the chart below the Mean Square Error (MSE) significantly reduced to only 0.07 from the 6.24 when the gain in P is configured to 1 and D to 10.
 
-![pid_cte](writeup-resources/tuning_pd.png)
+![pid_cte](writeup-resources/tuning-pd.png)
 
 
 The final hyperparameter for the gain in the P,I and D were chosen using both manual and twiddle. The twiddle algorithm is implemented as described from the lesson as follow but with slight modification to allow the interation with the simulator.
@@ -62,7 +62,7 @@ build/pid" -p 0 -i 0  -d 0 --dp 0.1 --di 0.0001 --dd=1 -t
 
 The output of the twidlle will look like the following, 
 
-![pid_cte](writeup-resources/twiddle.png)
+![pid_cte](writeup-resources/twiddle_output.png)
 
 which after 112 iterations it found new best cumulative error of 168.256 with:
 
